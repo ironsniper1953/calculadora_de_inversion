@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Interés Compuesto</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #eaf8e8;
+            border: 1px solid #d4edda;
+            color: #155724;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Interés Compuesto</h1>
+        <form id="calcForm">
+            <label for="principal">Capital Inicial (P):</label>
+            <input type="text" id="principal" placeholder="Ingresa el capital inicial" required>
+
+            <label for="monthly">Aporte Mensual:</label>
+            <input type="text" id="monthly" placeholder="Ingresa el aporte mensual" required>
+
+            <label for="rate">Tasa de Interés Anual (%):</label>
+            <input type="number" id="rate" placeholder="Ejemplo: 12" required>
+
+            <label for="time">Tiempo (años):</label>
+            <input type="number" id="time" placeholder="Ejemplo: 1" required>
+
+            <label for="frequency">Frecuencia de Capitalización:</label>
+            <select id="frequency" required>
+                <option value="1">Anual</option>
+                <option value="4">Trimestral</option>
+                <option value="12" selected>Mensual</option>
+                <option value="365">Diaria</option>
+            </select>
+
+            <button type="button" onclick="calculateInterest()">Calcular</button>
+        </form>
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Función para formatear números con punto para miles y coma para decimales
+        function formatearMoneda(numero) {
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(numero);
+        }
+
+        // Función para parsear número formateado
+        function parsearNumero(texto) {
+            return parseFloat(texto.replace(/[^0-9,-]/g, '').replace(',', '.'));
+        }
+
+        // Función para formatear inputs de moneda
+        function formatearInputMoneda(input) {
+            input.addEventListener('blur', function() {
+                let valor = this.value.replace(/[^\d,]/g, '');
+                let numero = parsearNumero(valor);
+                
+                if (!isNaN(numero)) {
+                    this.value = formatearMoneda(numero);
+                }
+            });
+
+            // Permitir solo números y coma
+            input.addEventListener('input', function() {
+                this.value = this.value.replace(/[^\d,]/g, '');
+            });
+        }
+
+        // Aplicar formateo de moneda a los inputs
+        const principalInput = document.getElementById('principal');
+        const monthlyInput = document.getElementById('monthly');
+        formatearInputMoneda(principalInput);
+        formatearInputMoneda(monthlyInput);
+
+        function calculateInterest() {
+            // Obtener valores de los campos
+            const principal = parsearNumero(document.getElementById('principal').value);
+            const monthly = parsearNumero(document.getElementById('monthly').value);
+            const rate = parseFloat(document.getElementById('rate').value) / 100; // Convertir a decimal
+            const time = parseFloat(document.getElementById('time').value);
+            const frequency = parseInt(document.getElementById('frequency').value);
+
+            // Validar entradas
+            if (isNaN(principal) || isNaN(monthly) || isNaN(rate) || isNaN(time) || isNaN(frequency)) {
+                alert("Por favor, ingresa valores válidos.");
+                return;
+            }
+
+            // Cálculo con aportes mensuales
+            const monthlyRate = rate / 12; // Tasa mensual
+            const months = time * 12;
+            
+            // Fórmula de interés compuesto con aportes mensuales
+            const finalAmount = principal * Math.pow((1 + rate / frequency), frequency * time) + 
+                                monthly * (Math.pow((1 + monthlyRate), months) - 1) / monthlyRate * (1 + monthlyRate);
+            
+            const totalContributions = principal + (monthly * months);
+            const totalInterest = finalAmount - totalContributions;
+            const interesgmensual = totalInterest / 12
+
+            // Mostrar resultados
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <p><strong>Monto Final (A):</strong> ${formatearMoneda(finalAmount)}</p>
+                <p><strong>Total Aportes:</strong> ${formatearMoneda(totalContributions)}</p>
+                <p><strong>Interés Generado:</strong> ${formatearMoneda(totalInterest)}</p>
+                <p><strong>Interes Generado por mes:</strong> ${formatearMoneda(interesgmensual)}</p>
+            `;
+
+            // Desplazarse a los resultados
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
